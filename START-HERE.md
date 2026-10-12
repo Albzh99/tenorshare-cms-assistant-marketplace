@@ -9,7 +9,7 @@
 1. 向公司 CMS 管理员申请你负责网站可用的 **CMS Open API Key**。告诉管理员需要读取站点、旧文章、模板、作者、分类和图片，以及新建草稿、上传并单独发布图片资源的权限。不要把 Key 发在 AI 聊天里。
 2. 在 Codex 新对话中，复制下面整段话发给 AI。它负责安装插件、打开可见终端和检查 Key；你不需要输入任何命令。
 
-   > 请安装或更新 Tenorshare CMS 文章助手，仓库是 https://github.com/Albzh99/tenorshare-cms-assistant-marketplace 。请按仓库 `SETUP.md` 自动识别我的 Windows 或 macOS，自己执行安装及依赖检查。先检查本机是否已有可用 CMS Key，有就不要再问。没有时，请启动对应系统的剪贴板保存流程，并把等待 Enter 的**同一个终端会话真正打开给我看**。我只会复制管理员给的 Key，然后回到终端按 Enter，不会粘贴、输入命令或把 Key 发在聊天里。保存后请运行插件的 `verify-workstation.py`，实际检查本机 Key、CMS POST 和 WebP 能力；只有检查通过才说安装完成。请不要使用旧版本缓存路径。然后主动问我负责的网站、语言和文章类型，启动首次建规范引导；如果新安装的技能需要新对话才能加载，请明确给我一条可以直接复制到新对话的完整建规范消息，不要让我自己写。
+   > 请安装或更新 Tenorshare CMS 文章助手，仓库是 https://github.com/Albzh99/tenorshare-cms-assistant-marketplace 。请按仓库 `SETUP.md` 安装身份为 `tenorshare-cms-assistant` 的插件，不要把 PoGoskill 独立插件当成多站点助手。自动识别 Windows 或 macOS，自己执行安装及依赖检查。先检查本机是否已有可用 CMS Key，有就不要再问。没有时，请启动对应系统的剪贴板保存流程，并把等待 Enter 的**同一个终端会话真正打开给我看**。我只会复制管理员给的 Key，然后回到终端按 Enter，不会粘贴、输入命令或把 Key 发在聊天里。保存后请运行插件的 `verify-workstation.py`，实际检查本机 Key、CMS POST 和 WebP 能力；只有检查通过且能调用 `$tenorshare-cms-article-assistant`，才说安装完成。请不要使用旧版本缓存路径。然后主动问我负责的网站、语言和文章类型，启动首次建规范引导；如果新安装的技能需要新对话才能加载，请明确给我一条可以直接复制到新对话的完整建规范消息，不要让我自己写。
 
 3. 只有 AI 明确显示“请现在复制完整的 CMS API Key”且你确实看见终端时，复制 Key；回到那个终端按一次 Enter。AI 会检查保存结果。已经保存过且检查通过的人跳过这一步。
 
@@ -19,7 +19,7 @@
 
    > 我负责【网站网址或产品名】【语言】的【文章类型】。请使用 `$tenorshare-cms-article-assistant`，先从 CMS 同站点的已发布文章建立一份仅供本站使用的 HTML 规范。按跨站学习清单检查标题、段落、目录、图片、表格、下载区、使用指南、Buy Box、视频及本站其他模块；逐项说明哪些固定、可选、不存在或待确认，展示真实组件样本和出现条件。现在只建规范，不上传文章。
 
-AI 会把规范保存在你电脑的站点专属目录。默认根目录在 Windows 是 `C:\Users\你的用户名\.codex\tenorshare-cms\site-profiles\`，在 macOS 是 `/Users/你的用户名/.codex/tenorshare-cms/site-profiles/`；若设置了 `CODEX_HOME`，位置会随之变化。AI 必须告诉你实际完整路径，不能只说“保存在本地”。每个站点／语言／文章类型一个目录，里面至少有 `profile.json`（站点与版本）、`html-contract.md`（详细 HTML 规范）、`review-report.md`（你看的简明审核报告）、真实组件样本、CMS 参考证据、正反测试样本和 `validate-html.py`。规范模板在[这里](plugins/pogoskill-cms-assistant/skills/cms-site-standard-builder/assets/html-contract.template.md)，具体 HTML 必须来自你的网站。
+AI 会把规范保存在你电脑的站点专属目录。默认根目录在 Windows 是 `C:\Users\你的用户名\.codex\tenorshare-cms\site-profiles\`，在 macOS 是 `/Users/你的用户名/.codex/tenorshare-cms/site-profiles/`；若设置了 `CODEX_HOME`，位置会随之变化。AI 必须告诉你实际完整路径，不能只说“保存在本地”。每个站点／语言／文章类型一个目录，里面至少有 `profile.json`（站点与版本）、`html-contract.md`（详细 HTML 规范）、`review-report.md`（你看的简明审核报告）、真实组件样本、CMS 参考证据、正反测试样本和 `validate-html.py`。规范模板在[这里](plugins/pogoskill-cms-assistant/site-skills/cms-site-standard-builder/assets/html-contract.template.md)，具体 HTML 必须来自你的网站。
 
 首次学习只读取 CMS 旧文章、模板和关联信息；不会新建、修改、删除、上传、生成或发布任何 CMS 内容。AI 只会在你自己的电脑上保存一份待确认规范。看到 `ready` 规范后再提供新稿，才进入单独的草稿上传任务。
 

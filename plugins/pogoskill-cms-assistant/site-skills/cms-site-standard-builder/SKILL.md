@@ -1,6 +1,6 @@
 ---
 name: cms-site-standard-builder
-description: 为公司 CMS 中的新网站或新文章类型建立可复用的站点规范，基于真实文章、模板字段和图片规则生成独立配置与校验器；不创建文章草稿。
+description: 为 4DDiG 等 Tenorshare 网站首次只读学习该站已发布文章的 HTML、模板、分类和图片规则，建立独立规范与校验器；不创建文章草稿，不套用 PoGoskill 模板。
 ---
 
 # 为新网站建立文章规范
@@ -9,7 +9,7 @@ description: 为公司 CMS 中的新网站或新文章类型建立可复用的�
 
 首次建站还必须读取[HTML 规范模板](assets/html-contract.template.md)和[运营审核报告模板](assets/review-report.template.md)，分别填成本地 `html-contract.md` 与 `review-report.md`；`ready` 规范和报告不可保留占位项。交付时给运营实际绝对路径和文件清单，不能只说“已保存在本地”。
 
-使用此技能处理“以后这个站点的文章都照这样做”。同事只需说明产品／网站与语言；旧 HTML 是可选参考，不是前置条件。优先从 CMS 同站点同类已发布文章的 `page/info.content` 学习真实 HTML；也可接受用户给的 HTML 或参考 URL。不要求同事输入 ID、命令或配置。一份规范只对应一个 CMS 站点、语言和文章类型。PoGoskill 既有技能保留，但它们的 ID、下载模块、Buy Box 或图片地址不得复制给其他产品。
+使用此技能处理“以后这个站点的文章都照这样做”。同事只需说明产品／网站与语言；旧 HTML 是可选参考，不是前置条件。优先从 CMS 同站点同类已发布文章的 `page/info.content` 学习真实 HTML；也可接受用户给的 HTML 或参考 URL。不要求同事输入 ID、命令或配置。一份规范只对应一个 CMS 站点、语言和文章类型。PoGoskill 专用模板在独立插件中，不属于本站规范来源；不得复制其 ID、下载模块、Buy Box 或图片地址。
 
 先读 [建站契约](references/site-standard-contract.md)和[跨站学习清单](references/html-learning-checklist.md)。CMS `page/info` 响应先用插件 `scripts/extract-cms-reference-html.py` 核实站点、模板及已发布状态，并把 `content` 导出为本地 HTML；用户提供的旧 HTML 则直接读取。对每份 HTML 运行 `scripts/inspect-reference-html.py` 并亲自阅读原文，对比 H1/H2/H3、目录、正文、表格、Buy Box、下载区、FAQ、图片盒、图片尺寸和断点；这些都可能因网站与文章类型而异。多个旧样本冲突时保留各自证据，先判断是否应拆成不同文章类型，不能拼成一种新样式。
 

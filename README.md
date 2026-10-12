@@ -1,103 +1,13 @@
-# Tenorshare CMS 文章助手
+# Tenorshare CMS 多站点文章助手
 
-这是 Tenorshare 全公司多产品、多语言网站使用的 Codex CMS 插件 Marketplace。GitHub 仓库已使用 Tenorshare 名称；内部插件和 Marketplace 安装 ID 暂保留 `pogoskill`，以兼容已安装同事。PoGoskill 是其中一个产品，不是其他网站的默认模板。新站点首次从 CMS 旧文章建立本地 HTML 规范和运营可读的审核报告；运营明确确认该版本后，日常新稿才按规范上传草稿，不重复学习。给同事直接发送 [一页使用说明](START-HERE.md)。包含：
+本仓库的插件身份是 `tenorshare-cms-assistant`，用于 Tenorshare 任一产品、语言和独立网站。它不预设 PoGoskill 的 HTML；PoGoskill 固定模板助手在[独立仓库](https://github.com/Albzh99/pogoskill-cms-article-assistant)。两种助手可以并存，不应把“英文”自动解释为“PoGoskill 英文”。
 
-- 台湾站 V2 文章 HTML 转换、机械校验与 CMS 草稿回读
-- 英文站 V2 文章 HTML 转换、固定英文下载区与 Buy Box、CMS 草稿回读
-- JPG/PNG 与 WebP 图片处理、上传及回填
-- CMS 草稿字段、HTML、来源覆盖和图片审查（AI 页面预览暂时停用）
-- 从 CMS 同站点同类旧文章或可选旧 HTML，为任一产品、语言、文章类型建立独立 profile、HTML 契约和校验器
+操作员只需看 [START-HERE.md](START-HERE.md)，安装细节由 AI 按 [SETUP.md](SETUP.md) 执行。安装后，给出目标网站或产品、语言、文章类型。例如：
 
-每份新站规范使用[统一填写模板](plugins/pogoskill-cms-assistant/skills/cms-site-standard-builder/assets/html-contract.template.md)，但具体代码和数值只从本站旧文章取得。默认保存在当前用户的 `.codex/tenorshare-cms/site-profiles/<站点>/<语言>/<文章类型>/`，不是插件缓存或公开 Git；确切位置由 `site-profile-root.py` 输出。运营可以继续修改自己站点的本地规范；重新复测、确认后，新文章仍使用正常 CMS 上传与图片资源发布入口。“首次学习只读”仅限制学习期间的 CMS 请求。
+> 我负责 4DDiG 英文站的 SEO 文章。请使用 `$tenorshare-cms-article-assistant`，先从 CMS 只读查询本站已发布的同类文章，学习真实 HTML，生成本站本机规范和简明审核报告给我确认。现在不上传文章，也不要套用 PoGoskill 模板。
 
-默认安全规则：文章只创建或更新草稿，不生成、不发布、不删除，也不修改无法确认归属的旧文章。新上传图片会使用其图片上传 `publish_id` 单独发布到云端，确保前台 URL 可用；图片发布绝不等于文章发布。
+首次建规范阶段只读 CMS，会在当前用户本机保存该站／语言／文章类型的 `profile.json`、`html-contract.md`、组件样本、校验器和 `review-report.md`。旧 HTML 可补充，但有 CMS 旧文章时不要求操作员提供。操作员确认后，新的文章任务才按该规范上传草稿。草稿上传可以上传并单独发布图片资源，不生成或发布文章、不修改无关旧文。
 
-## 让 AI 自动安装
+本仓库安装时只向 Codex 暴露三个多站点技能：`$tenorshare-cms-article-assistant`、`$cms-site-standard-builder` 和 `$cms-site-article-assistant`。历史 PoGoskill 素材和脚本仍保留供迁移及兼容测试，但 PoGoskill 专用技能不作为本插件入口。安装标识中的 Marketplace 名称 `pogoskill-team` 是旧注册名，不代表本站模板；插件名已独立为 `tenorshare-cms-assistant`。
 
-把本仓库地址交给组员的 Codex AI，并发送下面这句话：
-
-> 请从 Git 仓库安装或更新 Tenorshare CMS 文章助手：`https://github.com/Albzh99/tenorshare-cms-assistant-marketplace.git`。按 `SETUP.md` 自动识别 Windows 或 macOS，自己完成安装。先检查已保存的 CMS Key；只有没有时才启动对应平台的剪贴板保存流程，并把等待 Enter 的同一个会话真正打开到可见终端。我只复制 Key，再回到终端按 Enter。随后运行 `verify-workstation.py`，实际核对 Key、CMS POST 和 WebP 能力；不要让我输入命令或把 Key 发到聊天。安装后主动问我负责的网站、语言和文章类型，并启动首次建规范引导；如需新任务加载插件，请给我一条可直接复制的完整消息。
-
-组员的电脑需要：
-
-1. 安装 Codex 桌面版或 Codex CLI；
-2. 能正常访问 GitHub；
-3. 由 AI 检查本机 `codex`、Python 3 和图片编码能力，必要时完成有权限的依赖安装。
-
-API Key 不在仓库中，也不得提交到 Git。Windows 使用 DPAPI 加密的当前用户本地存储（并兼容 Credential Manager），macOS 使用当前用户 Keychain；插件升级不应重新索取已验证可用的 Key。
-
-如果 AI 给出的脚本路径包含旧版本号，或声称“终端已打开”但界面没有终端面板，说明它没有完成交互流程。应先更新插件，再由 AI 把同一运行会话显示到可见终端；不能让同事手工寻找缓存目录。
-
-已经安装过的同事可让 AI 执行 `codex plugin marketplace upgrade pogoskill-team`，再执行 `codex plugin add pogoskill-cms-assistant@pogoskill-team`，然后新建任务加载新版。
-
-不熟悉电脑操作的同事可直接使用 [Tenorshare 同事试用 Word 手册](docs/Tenorshare%20CMS%20文章助手同事试用指南.docx)，在线说明见 [START-HERE.md](START-HERE.md)。旧的 [PoGoskill 专用 Word 手册](docs/PoGoskill%20CMS%20文章助手同事试用指南.docx) 仅用于既有 PoGoskill 流程；其他产品请勿套用其中的固定规则。
-
-## 安装后怎样使用
-
-首次开通某网站／语言／文章类型时，先建规范并确认；以后每篇文章新建一个 Codex 任务，只附上一种语言的一篇新稿。不同网站的规范在各自电脑上分开保存，插件更新不会覆盖；换电脑须由 AI 迁移或重建。
-
-### 任一 Tenorshare 网站：一句话完成
-
-首次建规范时建议选较强模型，告诉 AI“我负责【网站／语言／文章类型】，先建立本站规范，给我看组件样本，不上传文章”。确认后，日常任务可选 Luna，上传新稿并说：
-
-> 我负责【网站／语言／文章类型】。请使用 `$tenorshare-cms-article-assistant`，只按本机已确认的本站规范完整处理这篇新稿的文字和图片，通过 CMS API 保存并回读草稿。不要重新学习，不要生成或发布文章。
-
-助手首次建站时自己查 CMS 站点和旧文章，建立待确认规范；确认后每篇只复用该规范。用户旧 HTML 是可选参考；只有 CMS 找不到同类旧文章时才要求补充。多个同产品同语言站点时，助手列出网址让运营选择；不会要求输入 CMS ID、JSON 或命令。没有已确认规范时不能直接写草稿。
-
-高级用户若只想单独建立规范、不上传新文章，可说：
-
-> 使用 `$cms-site-standard-builder` 为【产品／语言／网址】建立本站规范。优先读取 CMS 同类已发布文章；我提供的旧 HTML 仅作为补充。这一步不上传文章。
-
-规范按“网站 + 语言 + 文章类型”隔离。H2/H3、目录、表格、Buy Box、下载框、图片格式和尺寸均以该网站旧 HTML 为准；没有的模块不会凭空加入。作者、URL、关键词等 CMS 字段名及 POST 上传／回读方式是共享的，但字段取值、链接和关联 ID 按本站核对。新图上传后使用本次图片上传返回的 `publish_id` 单独发布资源也是共享流程；图片格式、目录、前台域名和 HTML 图片盒是站点变量。原图 + WebP 可复用现有成对上传脚本，其他格式组合先建立并验证处理规则。
-
-### 以下交稿细节仅适用于 PoGoskill 既有流程
-
-每篇稿件都要在文档开头或备注区提供参考样式，至少填写一种可核验来源：参考文章 URL、CMS 页面 ID 或可复制的现有 HTML。AI 必须先读取参考样式，再复用其中已存在的标题、目录、图片、表格、下载区、步骤与 Buy Box 结构。
-
-- 需要新上传的正文图片：直接嵌入 DOCX 的实际出现位置，不要只写本地路径或另发一包无位置说明的图片。AI 会按文档位置提取，保留 JPG/PNG，生成同名 WebP 后成对上传。
-- Guide 图片：不要重新嵌入或让 AI 猜图；在对应正文或步骤位置写 CMS `guides` 图片库中的准确文件名（含扩展名），例如 `guide-change-location-step-1.jpg`。AI 只能按该文件名精确检索并复用同名 fallback/WebP，不能换相似图或重新上传 Guide 图。
-- 并排双图：如果 DOCX 或参考文章明确把两张图放在同一个区域并排展示，请保留两张图的左右顺序和各自下方的说明文字。AI 使用插件固定的响应式双图结构；桌面端每张图显示宽度不超过 400px，手机端自动改为上下排列，禁止把两张图强行挤在一行。
-- 表格：普通表格按内容使用合理宽度并居中，不强制铺满正文，也不默认横向滚动。只有实际文字过长、在正文宽度内确实会挤压时，才切换为可横向滚动的宽表格；不能仅因列数多或横向排列就滚动。
-
-可直接写入 DOCX：
-
-```text
-参考样式：
-参考文章 URL / CMS 页面 ID / 现有 HTML：
-
-新上传正文图片：
-已直接嵌入 DOCX 对应位置。
-
-Guide 图片：
-在对应位置填写 CMS 准确文件名，例如：guide-change-location-step-1.jpg
-```
-
-### 繁中站文章
-
-适用范围：繁体中文稿件，目标站点为 `pogoskilltw` / `https://tw.pogoskill.com`。必须调用完整流程技能 `$pogoskill-cms-article-assistant`，它会串联繁中 Publisher、图片 Pipeline 和 Reviewer。
-
-附上 DOCX 后，把下面整段复制给 AI：
-
-> 使用 `$pogoskill-cms-article-assistant` 完整处理这篇繁中 DOCX。严格使用台湾站 V2 模板和繁体中文；完整保留正文、表格、FAQ、图片、下载区与 Buy Box。Guide／操作步骤只允许改变 HTML 包装；源文已有短标题可以原样加粗，后面的说明文字必须逐字、原序保留，禁止改写、润色、缩写、补写或重排。结语最后一个首页链接必须使用 DOCX 实际提供的“最佳／最好……”工具关键词作为锚文本，后面的 `PoGoskill` 保持普通文字，禁止链接品牌名本身。DOCX 中指定名称的 Guide 图片从 CMS 图片库精确查找；其他随稿图片保留 JPG/PNG 并生成同名 WebP，成对上传后使用图片上传响应的 `publish_id` 单独发布图片资源，确认两个前台 URL 均可访问后再回填 HTML。写入前及 CMS 回读后必须对账源 DOCX 图片出现次数、manifest 项数与 HTML 回填数，三个数量完全一致才算通过，少一张禁止保存或声称完成。通过 CMS POST API 保存为草稿并回读核对。禁止调用 `/cms/page/make`，禁止发布文章页面，禁止删除或修改其他文章。没有页面 ID、草稿状态、写入 request_id 和回读 request_id 时，不得声称完成。
-
-### 英文站文章
-
-适用范围：英文稿件，目标站点为 `pogoskill` / `https://www.pogoskill.com`。必须调用 `$pogoskill-cms-en-publisher`；不得调用繁中 Publisher，也不得混用繁中站链接、产品 ID、下载区或 Buy Box。
-
-附上英文 DOCX 后，把下面整段复制给 AI：
-
-> 使用 `$pogoskill-cms-en-publisher` 完整处理这篇英文 DOCX，目标站点是 `www.pogoskill.com`。请用中文汇报执行进度、异常和最终结果，但文章正文与 HTML 文案必须保持自然英文。完整保留每个段落、表格、FAQ、图片、英文下载区和英文 Buy Box，并严格遵守英文 V2 HTML 契约。Guide／operation steps 只允许改变 HTML 包装；源文已有 lead phrase 可以原样加粗，后面的说明必须逐字、原序保留，禁止 paraphrase、polish、shorten、expand 或 reorder。结语中把 DOCX 实际提供的 `best ...` 工具关键词链接到英文站首页，后面的 `PoGoskill` 品牌名保持普通文字。Guide 图片只按 DOCX 指定的准确文件名查找；其他随稿 JPG/PNG 保留原图并生成同名 WebP，上传到正确的英文站目录，使用 `/cms/picture/upload` 返回的 `publish_id` 单独发布图片资源，确认两个前台 URL 可访问后再回填 HTML。英文手机截图必须使用 `max-height` 和自动宽高，不能使用固定像素 `max-width`。通过 POST API 保存并回读 CMS 草稿。禁止调用 `/cms/page/make`，禁止发布文章页面，禁止删除或修改其他文章。没有页面 ID、草稿状态、写入 request_id 和回读 request_id 时，不得声称完成。
-
-### 只处理图片
-
-如果不需要创建或修改文章草稿，只需处理当前文章的图片，可附上图片或 DOCX 后输入：
-
-> 使用 `$pogoskill-cms-image-pipeline` 处理这些当前文章的真实图片。保留 JPG/PNG，生成同名 WebP，检查目标目录与重复文件，成对上传，并使用本次图片上传响应中的 `publish_id` 单独发布图片资源。确认两个前台 URL 均可访问后返回 manifest 和 request_id。禁止生成或发布文章页面。
-
-重要区别：`/cms/pagepublish/publish` 在这里仅用于发布图片上传记录。允许传入的唯一 ID 是 `/cms/picture/upload` 本次返回且有上传 `request_id` 佐证的图片 `publish_id`；页面 ID 和 `/cms/page/make` 产生的文章发布 ID 一律禁止。
-
-## 如何判断 AI 真的完成了
-
-成功回复至少应包含：页面 ID、URL、`status = 5`、`sync_status = 1`、写入 `request_id`、回读 `request_id`、HTML 校验结果、源 DOCX 图片数、manifest 图片数、CMS 回读 HTML 图片数，以及“图片资源已发布，文章未生成、未发布”。三个图片数必须完全一致；少一张就会在写入前被机械阻断，不能保存草稿或声称完成。HTML 校验也会拦截 `` `n ``、字面 `\n` 等可见换行污染，并区分普通表格与真正需要滚动的宽表格。如果只说“正在处理”“已准备 payload”或没有这些证据，就不算完成。
-
-两个站点共享安全的 API 调用与执行证据框架，但不会共享语言、站点 ID、模板 ID、下载链接或 Buy Box 文案。
+API Key 不在仓库中。Windows 从当前用户的受保护存储读取，macOS 从 Keychain 读取；有 Key 就不重复索取。首次保存采用“先运行等待命令、再复制 Key、回可见终端按 Enter”的流程。CMS 业务成功以响应 `code === 0` 和 `request_id` 为证据。学习阶段不调用写入接口；上传阶段必须有页面写入和回读证据，才可称草稿已保存。

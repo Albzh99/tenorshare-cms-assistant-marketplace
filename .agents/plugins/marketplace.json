@@ -5,7 +5,7 @@
   },
   "plugins": [
     {
-      "name": "pogoskill-cms-assistant",
+      "name": "tenorshare-cms-assistant",
       "source": {
         "source": "local",
         "path": "./plugins/pogoskill-cms-assistant"
