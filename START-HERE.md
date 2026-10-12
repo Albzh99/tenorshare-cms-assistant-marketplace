@@ -9,9 +9,9 @@
 1. 向公司 CMS 管理员申请你负责网站可用的 **CMS Open API Key**。告诉管理员需要读取站点、旧文章、模板、作者、分类和图片，以及新建草稿、上传并单独发布图片资源的权限。不要把 Key 发在 AI 聊天里。
 2. 在 Codex 新对话中，复制下面整段话发给 AI。它负责安装插件、打开可见终端和检查 Key；你不需要输入任何命令。
 
-   > 请安装或更新 Tenorshare CMS 文章助手，仓库是 https://github.com/Albzh99/tenorshare-cms-assistant-marketplace 。请按仓库 `SETUP.md` 安装身份为 `tenorshare-cms-assistant` 的插件，不要把 PoGoskill 独立插件当成多站点助手。自动识别 Windows 或 macOS，自己执行安装及依赖检查。先检查本机是否已有可用 CMS Key，有就不要再问。没有时，请启动对应系统的剪贴板保存流程，并把等待 Enter 的**同一个终端会话真正打开给我看**。我只会复制管理员给的 Key，然后回到终端按 Enter，不会粘贴、输入命令或把 Key 发在聊天里。保存后请运行插件的 `verify-workstation.py`，实际检查本机 Key、CMS POST 和 WebP 能力；只有检查通过且能调用 `$tenorshare-cms-article-assistant`，才说安装完成。请不要使用旧版本缓存路径。安装完成时主动告诉我：首次学习、写 HTML 规范与复核用较强推理模型，规范确认且上传稳定后日常任务才可用 Luna；你不能替我自动切换。然后只问我负责的网站和语言，自己从 CMS 判断 HTML 版式；不要让我选文章分类。如果新安装的技能需要新对话才能加载，请明确给我一条可以直接复制到新对话的完整建规范消息，不要让我自己写。
+   > 请安装或更新 Tenorshare CMS 文章助手，仓库是 https://github.com/Albzh99/tenorshare-cms-assistant-marketplace 。请按仓库 `SETUP.md` 安装身份为 `tenorshare-cms-assistant` 的插件，不要把 PoGoskill 独立插件当成多站点助手。自动识别 Windows 或 macOS，自己执行安装及依赖检查。先检查本机是否已有可用 CMS Key，有就不要再问。没有时，请按系统启动剪贴板保存流程：Windows 打开真正可见的终端；macOS 运行插件的 `cms-macos.py open-save-key-terminal`，由你打开独立的 macOS Terminal.app 窗口，不能用 Codex 内置终端代替。我只会复制管理员给的 Key，然后回到那个窗口按 Enter，不会粘贴、输入命令或把 Key 发在聊天里。保存后请运行插件的 `verify-workstation.py`，实际检查本机 Key、CMS POST 和 WebP 能力；只有检查通过且能调用 `$tenorshare-cms-article-assistant`，才说安装完成。请不要使用旧版本缓存路径。安装完成时主动告诉我：首次学习、写 HTML 规范与复核用较强推理模型，规范确认且上传稳定后日常任务才可用 Luna；你不能替我自动切换。然后只问我负责的网站和语言，自己从 CMS 判断 HTML 版式；不要让我选文章分类。如果新安装的技能需要新对话才能加载，请明确给我一条可以直接复制到新对话的完整建规范消息，不要让我自己写。
 
-3. 只有 AI 明确显示“请现在复制完整的 CMS API Key”且你确实看见终端时，复制 Key；回到那个终端按一次 Enter。AI 会检查保存结果。已经保存过且检查通过的人跳过这一步。
+3. 只有 AI 明确显示“请现在复制完整的 CMS API Key”且你确实看见终端时，复制 Key；Mac 上必须是独立的系统 Terminal.app 窗口，不是 Codex 里的终端面板。回到那个窗口按一次 Enter。AI 会检查保存结果。已经保存过且检查通过的人跳过这一步。
 
 ## 第一次为你的网站建立规范
 

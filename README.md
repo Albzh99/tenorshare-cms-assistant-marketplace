@@ -10,4 +10,4 @@
 
 本仓库安装时只向 Codex 暴露三个多站点技能：`$tenorshare-cms-article-assistant`、`$cms-site-standard-builder` 和 `$cms-site-article-assistant`。历史 PoGoskill 素材和脚本仍保留供迁移及兼容测试，但 PoGoskill 专用技能不作为本插件入口。安装标识中的 Marketplace 名称 `pogoskill-team` 是旧注册名，不代表本站模板；插件名已独立为 `tenorshare-cms-assistant`。
 
-API Key 不在仓库中。Windows 从当前用户的受保护存储读取，macOS 从 Keychain 读取；有 Key 就不重复索取。首次保存采用“先运行等待命令、再复制 Key、回可见终端按 Enter”的流程。CMS 业务成功以响应 `code === 0` 和 `request_id` 为证据。学习阶段不调用写入接口；上传阶段必须有页面写入和回读证据，才可称草稿已保存。
+API Key 不在仓库中。Windows 从当前用户的受保护存储读取，macOS 从 Keychain 读取；有 Key 就不重复索取。首次保存由 AI 启动等待流程，用户复制 Key 后回可见终端按 Enter；Mac 必须是独立的系统 Terminal.app，不是 Codex 内置终端。CMS 业务成功以响应 `code === 0` 和 `request_id` 为证据。学习阶段不调用写入接口；上传阶段必须有页面写入和回读证据，才可称草稿已保存。

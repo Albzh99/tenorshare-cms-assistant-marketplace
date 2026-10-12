@@ -17,7 +17,7 @@ codex plugin add tenorshare-cms-assistant@pogoskill-team
 
 ## Key 和本机检查
 
-先判断系统。Windows 从插件根目录运行 `scripts/cms-check-api-key.ps1`，macOS 运行 `python3 scripts/cms-macos.py check-key`。已有 Key 不再询问。确实没有时，Windows 运行不带 `-Prompt` 的 `scripts/cms-save-api-key.ps1`，macOS 运行 `python3 scripts/cms-macos.py save-key`。把**同一个等待 Enter 的进程**打开到用户可见终端；用户复制完整 Key 后回终端只按 Enter，不粘贴、不发聊天。等待进程退出，再用相应平台的检查命令验证。Mac 不运行 `.ps1` 或 Windows `.exe`。
+先判断系统。Windows 从插件根目录运行 `scripts/cms-check-api-key.ps1`，macOS 运行 `python3 scripts/cms-macos.py check-key`。已有 Key 不再询问。确实没有时，Windows 运行不带 `-Prompt` 的 `scripts/cms-save-api-key.ps1` 并打开可见终端；**macOS 必须由 AI 运行 `python3 scripts/cms-macos.py open-save-key-terminal`，让系统打开真正的 Terminal.app 窗口**。Mac 不能直接在 Codex 内置终端运行 `save-key`，也不能把那个内置终端说成 Terminal.app；脚本会拒绝这种用法。AI 看见启动请求成功后，让用户确认屏幕上确实出现名为 Terminal 的独立系统窗口；只有该窗口出现，才让用户复制 Key、回到该窗口按 Enter，不粘贴、不发聊天。之后 AI 再运行 Mac 的 `check-key`，实际成功才说已保存。若 macOS 阻止打开 Terminal.app，报告该具体错误并请求用户处理系统弹窗；不要谎称窗口已打开，也不要退回不可用的 Codex 内置终端。Mac 不运行 `.ps1` 或 Windows `.exe`。
 
 随后运行插件根目录 `scripts/verify-workstation.py`，实际检查当前凭据、`/cms/site/list` 只读 POST 和 WebP 编码能力。Windows 缺 PATH 中的 PowerShell 时，AI 定位当前机器真实的 `pwsh` 并传 `--powershell`；Mac 不传。失败按具体错误处理，不把“Key 检查通过”误报为“4DDiG 已建规范”或“文章已上传”。
 

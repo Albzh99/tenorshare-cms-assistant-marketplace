@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,43 @@ SPEC.loader.exec_module(MODULE)
 
 
 class MacTransportTests(unittest.TestCase):
+    def test_save_key_rejects_codex_integrated_terminal(self):
+        with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Codex",
+                                                "TENORSHARE_CMS_TERMINAL_LAUNCH": "1"}):
+            with self.assertRaisesRegex(RuntimeError, "Terminal.app"):
+                MODULE.require_external_terminal()
+        with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Apple_Terminal",
+                                                "TENORSHARE_CMS_TERMINAL_LAUNCH": "1"}):
+            MODULE.require_external_terminal()
+        with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Apple_Terminal",
+                                                "TENORSHARE_CMS_TERMINAL_LAUNCH": ""}):
+            with self.assertRaisesRegex(RuntimeError, "Terminal.app"):
+                MODULE.require_external_terminal()
+
+    def test_external_terminal_launcher_contains_no_key_or_clipboard_value(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with patch.object(MODULE, "require_macos"), patch.object(
+                    MODULE.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run:
+                MODULE.open_save_key_terminal(temp)
+            command = run.call_args.args[0]
+            self.assertEqual(command[:3], ["open", "-a", "Terminal"])
+            launcher = Path(command[3])
+            self.assertEqual(launcher.parent, Path(temp))
+            self.assertEqual(launcher.suffix, ".command")
+            content = launcher.read_text(encoding="utf-8")
+            self.assertIn("save-key", content)
+            self.assertNotIn("pbpaste", content)
+            self.assertNotIn("X-API-KEY", content)
+
+    def test_external_terminal_launch_failure_removes_temp_script(self):
+        with tempfile.TemporaryDirectory() as temp:
+            failed = subprocess.CompletedProcess([], 1, stderr="Terminal unavailable")
+            with patch.object(MODULE, "require_macos"), patch.object(
+                    MODULE.subprocess, "run", return_value=failed):
+                with self.assertRaisesRegex(RuntimeError, "Could not open macOS Terminal.app"):
+                    MODULE.open_save_key_terminal(temp)
+            self.assertEqual(list(Path(temp).iterdir()), [])
+
     def test_multipart_contains_files_and_no_key(self):
         with tempfile.TemporaryDirectory() as temp:
             file = Path(temp) / "article-image.jpg"
