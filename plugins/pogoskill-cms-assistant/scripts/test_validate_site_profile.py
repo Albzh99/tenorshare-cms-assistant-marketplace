@@ -21,11 +21,25 @@ class SiteProfileTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / "evidence").mkdir()
         (self.root / "tests").mkdir()
+        (self.root / "assets").mkdir()
         (self.root / "tests" / "valid.html").write_text("<article>valid sample</article>", encoding="utf-8")
         (self.root / "tests" / "invalid.html").write_text("<article>invalid sample</article>", encoding="utf-8")
-        sections = "\n".join(f"## {name}\n本站已核对：无或有真实证据。" for name in MODULE.REQUIRED_CONTRACT_SECTIONS)
+        sections = "\n".join(f"## {name}\n本站已核对：无或有真实证据。" for name in MODULE.REQUIRED_CONTRACT_SECTIONS
+                             if name != "逐模块执行规则表")
+        rows = ["## 逐模块执行规则表", "| 模块 | 状态 | 条件 | 位置与顺序 | 可执行规则 | 证据 | 片段 |",
+                "| --- | --- | --- | --- | --- | --- | --- |"]
+        for index, name in enumerate(MODULE.RULE_MODULES):
+            if index < 3:
+                asset = f"assets/module-{index}.html"
+                (self.root / asset).write_text(f"<p>Reference module {index}</p>", encoding="utf-8")
+                rows.append(f"| {name} | 固定 | 每篇正文 | 正文开始处 | 使用 `<p>` 标签，不改层级 | 参考页 789 | {asset} |")
+            else:
+                rows.append(f"| {name} | 无 | 此文章类型未出现 | 正文不插入 | 正文不插入该模块 | 参考页 789 | 无，参考页未出现 |")
+        sections += "\n" + "\n".join(rows)
         (self.root / "html-contract.md").write_text("# Site article rules\n" + sections, encoding="utf-8")
         report_sections = "\n".join(f"## {name}\n本站已核对的实际内容。" for name in MODULE.REQUIRED_REPORT_SECTIONS)
+        report_sections += "\n参考页 789：\n```html\n<p>Reference module 0</p>\n```\n"
+        report_sections += "\n参考页 789：\n```html\n<p>Reference module 1</p>\n```\n"
         (self.root / "review-report.md").write_text("# Site review\n" + report_sections, encoding="utf-8")
         self.report_sha256 = hashlib.sha256((self.root / "review-report.md").read_bytes()).hexdigest()
         (self.root / "validate-html.py").write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
@@ -51,7 +65,7 @@ class SiteProfileTests(unittest.TestCase):
             "review_report": "review-report.md",
             "validator": "validate-html.py",
             "validation_examples": {"valid_html": "tests/valid.html", "invalid_html": "tests/invalid.html"},
-            "assets": [],
+            "assets": ["assets/module-0.html", "assets/module-1.html", "assets/module-2.html"],
         }
         self.seal()
 
@@ -128,7 +142,6 @@ class SiteProfileTests(unittest.TestCase):
         self.assertTrue(self.check()["pass"])
 
     def test_rejects_local_component_edit_until_reconfirmed(self):
-        (self.root / "assets").mkdir()
         asset = self.root / "assets" / "paragraph.html"
         asset.write_text("<p>Original</p>", encoding="utf-8")
         self.profile["assets"] = ["assets/paragraph.html"]
@@ -167,6 +180,42 @@ class SiteProfileTests(unittest.TestCase):
         self.assertFalse(result["pass"])
         self.assertTrue(any("missing required section" in error for error in result["errors"]))
         self.assertTrue(any("unfilled template" in error for error in result["errors"]))
+
+    def test_rejects_overview_only_rule_table(self):
+        contract = self.root / "html-contract.md"
+        content = contract.read_text(encoding="utf-8")
+        contract.write_text(content.replace("使用 `<p>` 标签，不改层级", "已核对旧文"), encoding="utf-8")
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("summary" in error for error in result["errors"]))
+
+    def test_rejects_placeholder_component(self):
+        (self.root / "assets" / "module-0.html").write_text("<p>example.webp ...</p>", encoding="utf-8")
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("placeholder markup" in error for error in result["errors"]))
+
+    def test_rejects_unindexed_rule_asset(self):
+        self.profile["assets"] = ["assets/module-1.html", "assets/module-2.html"]
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("profile.assets" in error for error in result["errors"]))
+
+    def test_rejects_unresolved_module_when_ready(self):
+        contract = self.root / "html-contract.md"
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "| 视频 | 无 |", "| 视频 | 待确认 |"), encoding="utf-8")
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("unresolved module" in error for error in result["errors"]))
+
+    def test_rejects_report_without_real_snippets(self):
+        report = self.root / "review-report.md"
+        report.write_text("# Site review\n" + "\n".join(
+            f"## {name}\n本站已核对。" for name in MODULE.REQUIRED_REPORT_SECTIONS), encoding="utf-8")
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("2-4 real" in error for error in result["errors"]))
 
     def test_rejects_missing_negative_example(self):
         self.profile["validation_examples"]["invalid_html"] = "tests/missing.html"
@@ -218,12 +267,26 @@ class SiteProfileTests(unittest.TestCase):
                                   "publish_mode": "picture-upload-publish-id",
                                   "public_url_prefix": "https://images.example.com/blog/",
                                   "markup_asset": "assets/image-box.html"}
-        (self.root / "assets").mkdir()
-        (self.root / "assets" / "image-box.html").write_text("<picture><img src=\"...\"></picture>", encoding="utf-8")
+        (self.root / "assets" / "image-box.html").write_text(
+            '<picture><img src="https://images.example.com/blog/real-photo.jpg" alt="Real photo"></picture>',
+            encoding="utf-8")
         self.seal()
         self.assertTrue(self.check()["pass"])
         self.profile["images"]["public_url_prefix"] = "https://site.p.cms.afirstsoft.cn/example/"
         self.assertFalse(self.check()["pass"])
+
+    def test_rejects_placeholder_image_markup(self):
+        self.profile["images"] = {"enabled": True, "formats": ["jpg", "webp"],
+                                  "cms_directories": {"article": "blog"},
+                                  "publish_mode": "picture-upload-publish-id",
+                                  "public_url_prefix": "https://images.example.com/blog/",
+                                  "markup_asset": "assets/image-box.html"}
+        (self.root / "assets" / "image-box.html").write_text(
+            '<picture><img src="example.webp" alt="placeholder"></picture>', encoding="utf-8")
+        self.seal()
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("non-placeholder image HTML" in error for error in result["errors"]))
 
 
 if __name__ == "__main__":

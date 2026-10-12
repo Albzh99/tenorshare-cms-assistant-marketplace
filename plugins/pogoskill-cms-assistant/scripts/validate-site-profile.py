@@ -14,11 +14,18 @@ SAFE_SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REQUIRED_CONTRACT_SECTIONS = (
     "适用范围与证据", "CMS 字段与动态关联", "页面骨架与模块顺序", "标题与目录",
     "段落与列表", "图片与媒体", "表格", "产品区与下载", "FAQ 与特殊模块",
-    "结论与链接", "校验与例外",
+    "结论与链接", "校验与例外", "逐模块执行规则表", "参考文章差异与适用条件",
 )
 REQUIRED_REPORT_SECTIONS = (
-    "这份规范管什么", "文章会长什么样", "上传时会怎样处理", "已检查与待确认", "请运营回复",
+    "这份规范管什么", "文章会长什么样", "可直接照做的关键规则",
+    "上传时会怎样处理", "已检查与待确认", "请运营回复",
 )
+RULE_MODULES = (
+    "页面骨架", "H2/H3 标题", "目录与锚点", "段落与强调", "列表与步骤",
+    "图片与图注", "表格", "产品介绍", "下载区", "Buy Box／购买区",
+    "使用指南", "FAQ", "视频", "结语与内链",
+)
+RULE_STATUSES = {"固定", "可选", "无", "待确认"}
 RULE_FIELDS = (
     "schema_version", "profile_id", "profile_version", "site", "article_type", "cms",
     "references", "cms_discovery", "images", "html_contract", "review_report",
@@ -89,6 +96,57 @@ def contains_id(value, target):
     return False
 
 
+def check_rule_table(contract, root, indexed_assets):
+    """Reject overview-only contracts while allowing site-specific optional modules."""
+    errors = []
+    match = re.search(r"^## 逐模块执行规则表\s*$([\s\S]*?)(?=^## |\Z)", contract, re.MULTILINE)
+    if not match:
+        return ["html_contract missing actionable rule table"]
+    rows = {}
+    for line in match.group(1).splitlines():
+        if not line.startswith("|") or line.startswith("| ---") or line.startswith("| 模块"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) != 7:
+            errors.append("html_contract rule table rows must have seven filled columns")
+            continue
+        name, status, condition, position, rule, evidence, asset = cells
+        if name in rows:
+            errors.append(f"html_contract duplicate module rule: {name}")
+        rows[name] = cells
+        if status not in RULE_STATUSES:
+            errors.append(f"html_contract {name}: status must be 固定/可选/无/待确认")
+        if any(not cell or "【" in cell or "未填写" in cell for cell in cells):
+            errors.append(f"html_contract {name}: rule has blank or placeholder fields")
+        if status in {"固定", "可选"}:
+            if not re.search(r"[<`]|class=|style=|尺寸|像素|px|模板字段", rule):
+                errors.append(f"html_contract {name}: rule is a summary, not an HTML/style/size instruction")
+            if not re.search(r"assets/[^\s`]+\.html", asset):
+                errors.append(f"html_contract {name}: a real assets/*.html snippet is required")
+            else:
+                asset_name = re.search(r"assets/[^\s`]+\.html", asset).group(0)
+                if asset_name not in indexed_assets:
+                    errors.append(f"html_contract {name}: asset must be listed in profile.assets for approval fingerprint")
+                try:
+                    snippet = local_file(root, asset_name, ".html").read_text(encoding="utf-8-sig")
+                    if not re.search(r"<\s*[a-z][\w-]*\b", snippet, re.IGNORECASE):
+                        errors.append(f"html_contract {name}: asset contains no HTML element")
+                    if re.search(r"【|example\.(?:webp|jpe?g|png)|IMAGE_PENDING|\.\.\.", snippet, re.IGNORECASE):
+                        errors.append(f"html_contract {name}: asset still contains example or placeholder markup")
+                except (OSError, ValueError) as exc:
+                    errors.append(f"html_contract {name}: asset {exc}")
+        if not re.search(r"\b\d{3,}\b|evidence/", evidence):
+            errors.append(f"html_contract {name}: cite a reference page ID or evidence file")
+    for name in RULE_MODULES:
+        if name not in rows:
+            errors.append(f"html_contract rule table missing module: {name}")
+    if sum(rows[name][1] in {"固定", "可选"} for name in RULE_MODULES if name in rows) < 3:
+        errors.append("html_contract rule table has too few observed active modules")
+    if any(cells[1] == "待确认" for cells in rows.values()):
+        errors.append("html_contract has unresolved module rules; keep profile draft")
+    return errors
+
+
 def check_profile(profile_path):
     path = Path(profile_path).resolve()
     root = path.parent
@@ -131,6 +189,11 @@ def check_profile(profile_path):
                 errors.append(f"review_report missing required section: {section}")
         if "【未填写】" in report:
             errors.append("review_report still contains unfilled template placeholders")
+        snippets = re.findall(r"```html\s*\n([\s\S]*?)\n```", report, flags=re.IGNORECASE)
+        if not 2 <= len(snippets) <= 4 or any(not re.search(r"<\s*[a-z][\w-]*\b", item, re.IGNORECASE)
+                                                or re.search(r"【|\.\.\.|example\.(?:webp|jpe?g|png)", item, re.IGNORECASE)
+                                                for item in snippets):
+            errors.append("review_report must show 2-4 real, non-placeholder HTML snippets")
         digest = hashlib.sha256(report_path.read_bytes()).hexdigest()
         if approval.get("report_sha256") != digest:
             errors.append("approval.report_sha256 must match the current review_report")
@@ -186,7 +249,10 @@ def check_profile(profile_path):
         if images.get("publish_mode") != "picture-upload-publish-id":
             errors.append("images.publish_mode must describe the confirmed CMS image publication flow")
         try:
-            local_file(root, images.get("markup_asset"))
+            image_markup = local_file(root, images.get("markup_asset"), ".html").read_text(encoding="utf-8-sig")
+            if not re.search(r"<\s*(?:img|picture)\b", image_markup, re.IGNORECASE) or re.search(
+                    r"【|example\.(?:webp|jpe?g|png)|IMAGE_PENDING|\.\.\.", image_markup, re.IGNORECASE):
+                errors.append("images.markup_asset must contain real, non-placeholder image HTML")
         except ValueError as exc:
             errors.append(f"images.markup_asset: {exc}")
 
@@ -276,6 +342,7 @@ def check_profile(profile_path):
                         errors.append(f"html_contract missing required section: {section}")
                 if "【未填写】" in contract:
                     errors.append("html_contract still contains unfilled template placeholders")
+                errors.extend(check_rule_table(contract, root, profile.get("assets") or []))
         except ValueError as exc:
             errors.append(f"{field}: {exc}")
     assets = profile.get("assets")
