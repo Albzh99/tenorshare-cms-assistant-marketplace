@@ -27,18 +27,27 @@ class MacTransportTests(unittest.TestCase):
 
     def test_external_terminal_launcher_contains_no_key_or_clipboard_value(self):
         with tempfile.TemporaryDirectory() as temp:
+            observed = {}
+            def launch(command, **_kwargs):
+                launcher = Path(command[3])
+                observed["command"] = command
+                observed["content"] = launcher.read_text(encoding="utf-8")
+                launcher.with_suffix(".ready").write_text("Apple_Terminal", encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0)
             with patch.object(MODULE, "require_macos"), patch.object(
-                    MODULE.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run:
+                    MODULE.subprocess, "run", side_effect=launch):
                 MODULE.open_save_key_terminal(temp)
-            command = run.call_args.args[0]
+            command = observed["command"]
             self.assertEqual(command[:3], ["open", "-a", "Terminal"])
             launcher = Path(command[3])
             self.assertEqual(launcher.parent, Path(temp))
             self.assertEqual(launcher.suffix, ".command")
-            content = launcher.read_text(encoding="utf-8")
+            content = observed["content"]
             self.assertIn("save-key", content)
+            self.assertIn("TERM_PROGRAM", content)
             self.assertNotIn("pbpaste", content)
             self.assertNotIn("X-API-KEY", content)
+            self.assertEqual(list(Path(temp).iterdir()), [])
 
     def test_external_terminal_launch_failure_removes_temp_script(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -48,6 +57,33 @@ class MacTransportTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "Could not open macOS Terminal.app"):
                     MODULE.open_save_key_terminal(temp)
             self.assertEqual(list(Path(temp).iterdir()), [])
+
+    def test_open_success_without_external_prompt_is_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with patch.object(MODULE, "require_macos"), patch.object(
+                    MODULE.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)), patch.object(
+                    MODULE, "wait_for_external_terminal", return_value=False):
+                with self.assertRaisesRegex(RuntimeError, "did not start the key prompt"):
+                    MODULE.open_save_key_terminal(temp)
+            self.assertEqual(list(Path(temp).iterdir()), [])
+
+    def test_curl_transport_keeps_key_out_of_argv_and_files(self):
+        key = "AFS1727-0001-example-valid-key"
+        seen = {}
+        def run(command, **kwargs):
+            seen["argv"] = command
+            seen["stdin"] = kwargs["input"]
+            Path(command[command.index("--output") + 1]).write_bytes(b'{"code":0,"request_id":"ok"}')
+            Path(command[command.index("--dump-header") + 1]).write_bytes(b"HTTP/2 200\r\n")
+            seen["body"] = Path(command[command.index("--data-binary") + 1][1:]).read_bytes()
+            return subprocess.CompletedProcess(command, 0, stdout="200", stderr="")
+        with patch.object(MODULE.shutil, "which", return_value="/usr/bin/curl"), patch.object(
+                MODULE.subprocess, "run", side_effect=run):
+            result = MODULE.cms_post("/cms/site/list", b"{}", api_key=key)
+        self.assertEqual(result["request_id"], "ok")
+        self.assertEqual(seen["body"], b"{}")
+        self.assertNotIn(key, " ".join(seen["argv"]))
+        self.assertIn(key, seen["stdin"])
 
     def test_multipart_contains_files_and_no_key(self):
         with tempfile.TemporaryDirectory() as temp:

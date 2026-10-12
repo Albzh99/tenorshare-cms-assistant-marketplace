@@ -17,9 +17,11 @@ codex plugin add tenorshare-cms-assistant@pogoskill-team
 
 ## Key 和本机检查
 
-先判断系统。Windows 从插件根目录运行 `scripts/cms-check-api-key.ps1`，macOS 运行 `python3 scripts/cms-macos.py check-key`。已有 Key 不再询问。确实没有时，Windows 运行不带 `-Prompt` 的 `scripts/cms-save-api-key.ps1` 并打开可见终端；**macOS 必须由 AI 运行 `python3 scripts/cms-macos.py open-save-key-terminal`，让系统打开真正的 Terminal.app 窗口**。Mac 不能直接在 Codex 内置终端运行 `save-key`，也不能把那个内置终端说成 Terminal.app；脚本会拒绝这种用法。AI 看见启动请求成功后，让用户确认屏幕上确实出现名为 Terminal 的独立系统窗口；只有该窗口出现，才让用户复制 Key、回到该窗口按 Enter，不粘贴、不发聊天。之后 AI 再运行 Mac 的 `check-key`，实际成功才说已保存。若 macOS 阻止打开 Terminal.app，报告该具体错误并请求用户处理系统弹窗；不要谎称窗口已打开，也不要退回不可用的 Codex 内置终端。Mac 不运行 `.ps1` 或 Windows `.exe`。
+先判断系统。Windows 从插件根目录运行 `scripts/cms-check-api-key.ps1`，macOS 运行 `python3 scripts/cms-macos.py check-key`。已有 Key 不再询问。确实没有时，Windows 运行不带 `-Prompt` 的 `scripts/cms-save-api-key.ps1` 并打开可见终端；**macOS 必须由 AI 运行 `python3 scripts/cms-macos.py open-save-key-terminal`，让系统打开真正的 Terminal.app 窗口**。Mac 不能直接在 Codex 内置终端运行 `save-key`，也不能把那个内置终端说成 Terminal.app；脚本会拒绝这种用法。Mac 启动命令现在等待独立 Terminal.app 中的脚本发回就绪信号；若超时即失败，不能凭 `open` 退出码称窗口已开。收到信号且用户确认确实看见系统窗口，才让用户复制 Key、回到该窗口按 Enter，不粘贴、不发聊天。之后 AI 再运行 Mac 的 `check-key`，实际成功才说已保存。若 macOS 阻止打开 Terminal.app，报告该具体错误并请求用户处理系统弹窗；不要谎称窗口已打开，也不要退回不可用的 Codex 内置终端。Mac 不运行 `.ps1` 或 Windows `.exe`。
 
 随后运行插件根目录 `scripts/verify-workstation.py`，实际检查当前凭据、`/cms/site/list` 只读 POST 和 WebP 编码能力。Windows 缺 PATH 中的 PowerShell 时，AI 定位当前机器真实的 `pwsh` 并传 `--powershell`；Mac 不传。失败按具体错误处理，不把“Key 检查通过”误报为“4DDiG 已建规范”或“文章已上传”。
+
+Mac 的 CMS POST 现在使用系统 `curl`，不再由 Python `urllib` 发往网关；Key 仍从当前用户 Keychain 读取，经 curl 的标准输入传入，不出现在命令参数或临时文件。`check-key` 只证实本机有格式有效的 Key，不等于网关授权。若出现 403，先用当前插件的 `verify-workstation.py` 检查只读 `/cms/site/list`，记录脱敏的接口、HTTP 状态、`code`、`msg`、`request_id`；再根据同一台 Mac 上 curl 的实际结果区分旧版脚本、请求路径与网关／网络出口问题，不直接说 Key 没权限或反复索要。
 
 安装检查通过后，**安装 AI 必须主动告知运营模型选择**，不能等运营问：首次学习网站、编写及审核 `html-contract.md`／组件校验器、修订规范时，请在 Codex 的模型／推理控制中选当前账户可用的较强推理模型；这是需要判断本站结构的阶段。规范 `ready` 且几篇草稿上传、回读稳定后，重复执行才可改用较便宜的 Luna。遇到新模块、版式冲突或规范修订，再切回较强模型。只建议和说明，不假称 AI 能自动切换模型，也不假定运营账户一定有某个具体型号。安装完成回复中同时给出这段提醒和一条可直接复制的建规范消息。
 
