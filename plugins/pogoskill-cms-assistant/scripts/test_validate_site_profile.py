@@ -66,6 +66,7 @@ class SiteProfileTests(unittest.TestCase):
             "validator": "validate-html.py",
             "validation_examples": {"valid_html": "tests/valid.html", "invalid_html": "tests/invalid.html"},
             "assets": ["assets/module-0.html", "assets/module-1.html", "assets/module-2.html"],
+            "optional_rule_waivers": [],
         }
         self.seal()
 
@@ -208,6 +209,65 @@ class SiteProfileTests(unittest.TestCase):
         result = self.check()
         self.assertFalse(result["pass"])
         self.assertTrue(any("unresolved module" in error for error in result["errors"]))
+
+    def test_accepts_operator_deferred_video_without_weakening_core(self):
+        contract = self.root / "html-contract.md"
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "| 视频 | 无 |", "| 视频 | 待确认 |"), encoding="utf-8")
+        self.profile["optional_rule_waivers"] = [{
+            "module": "视频", "decision": "defer_until_needed",
+            "reason": "已查同版式参考页，未找到可复用的视频结构；有视频稿件时再补规范。",
+            "operator_confirmation": "运营确认：视频先暂缓，普通文章可用。",
+        }]
+        report = self.root / "review-report.md"
+        report.write_text(report.read_text(encoding="utf-8") +
+                          "\n视频：运营确认暂缓；新稿有视频时先补规范。运营确认：视频先暂缓，普通文章可用。\n",
+                          encoding="utf-8")
+        self.seal()
+        self.assertTrue(self.check()["pass"])
+        self.profile["optional_rule_waivers"][0]["reason"] += " 更新后须重新确认。"
+        changed = self.check()
+        self.assertFalse(changed["pass"])
+        self.assertTrue(any("rules_sha256" in error for error in changed["errors"]))
+
+    def test_rejects_waiver_for_core_layout(self):
+        contract = self.root / "html-contract.md"
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "| 页面骨架 | 固定 |", "| 页面骨架 | 待确认 |"), encoding="utf-8")
+        self.profile["optional_rule_waivers"] = [{
+            "module": "页面骨架", "decision": "defer_until_needed",
+            "reason": "不允许把页面主体结构作为低频模块暂缓。",
+            "operator_confirmation": "先跳过",
+        }]
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("core layout" in error for error in result["errors"]))
+
+    def test_rejects_unconfirmed_optional_waiver(self):
+        contract = self.root / "html-contract.md"
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "| FAQ | 无 |", "| FAQ | 待确认 |"), encoding="utf-8")
+        self.profile["optional_rule_waivers"] = [{
+            "module": "FAQ", "decision": "defer_until_needed",
+            "reason": "参考文章未包含 FAQ，待有含 FAQ 的文章再补真实结构。",
+        }]
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("operator confirmation" in error for error in result["errors"]))
+
+    def test_rejects_waiver_not_disclosed_in_report(self):
+        contract = self.root / "html-contract.md"
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "| FAQ | 无 |", "| FAQ | 待确认 |"), encoding="utf-8")
+        self.profile["optional_rule_waivers"] = [{
+            "module": "FAQ", "decision": "defer_until_needed",
+            "reason": "参考文章未包含 FAQ，待有含 FAQ 的文章再补真实结构。",
+            "operator_confirmation": "同意暂缓 FAQ，有 FAQ 的新稿先补规范",
+        }]
+        self.seal()
+        result = self.check()
+        self.assertFalse(result["pass"])
+        self.assertTrue(any("review_report must quote" in error for error in result["errors"]))
 
     def test_rejects_report_without_real_snippets(self):
         report = self.root / "review-report.md"

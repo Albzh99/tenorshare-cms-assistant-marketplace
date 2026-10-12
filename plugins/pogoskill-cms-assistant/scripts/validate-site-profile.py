@@ -18,7 +18,7 @@ REQUIRED_CONTRACT_SECTIONS = (
 )
 REQUIRED_REPORT_SECTIONS = (
     "这份规范管什么", "文章会长什么样", "可直接照做的关键规则",
-    "上传时会怎样处理", "已检查与待确认", "请运营回复",
+    "上传时会怎样处理", "已检查与待确认", "人工暂缓的低频模块", "请运营回复",
 )
 RULE_MODULES = (
     "页面骨架", "H2/H3 标题", "目录与锚点", "段落与强调", "列表与步骤",
@@ -26,6 +26,8 @@ RULE_MODULES = (
     "使用指南", "FAQ", "视频", "结语与内链",
 )
 RULE_STATUSES = {"固定", "可选", "无", "待确认"}
+CORE_RULE_MODULES = {"页面骨架", "H2/H3 标题", "段落与强调", "图片与图注"}
+DEFERRABLE_MODULES = set(RULE_MODULES) - CORE_RULE_MODULES
 RULE_FIELDS = (
     "schema_version", "profile_id", "profile_version", "site", "article_type", "cms",
     "references", "cms_discovery", "images", "html_contract", "review_report",
@@ -80,8 +82,11 @@ def rules_sha256(profile, root):
     for name in names:
         path = local_file(root, name)
         files[str(Path(name))] = hashlib.sha256(path.read_bytes()).hexdigest()
-    snapshot = {"profile": {field: profile.get(field) for field in RULE_FIELDS},
-                "files": dict(sorted(files.items()))}
+    profile_snapshot = {field: profile.get(field) for field in RULE_FIELDS}
+    # Preserve fingerprints for profiles created before optional waivers existed.
+    if profile.get("optional_rule_waivers"):
+        profile_snapshot["optional_rule_waivers"] = profile["optional_rule_waivers"]
+    snapshot = {"profile": profile_snapshot, "files": dict(sorted(files.items()))}
     encoded = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
@@ -96,7 +101,7 @@ def contains_id(value, target):
     return False
 
 
-def check_rule_table(contract, root, indexed_assets):
+def check_rule_table(contract, root, indexed_assets, waivers):
     """Reject overview-only contracts while allowing site-specific optional modules."""
     errors = []
     match = re.search(r"^## 逐模块执行规则表\s*$([\s\S]*?)(?=^## |\Z)", contract, re.MULTILINE)
@@ -142,8 +147,32 @@ def check_rule_table(contract, root, indexed_assets):
             errors.append(f"html_contract rule table missing module: {name}")
     if sum(rows[name][1] in {"固定", "可选"} for name in RULE_MODULES if name in rows) < 3:
         errors.append("html_contract rule table has too few observed active modules")
-    if any(cells[1] == "待确认" for cells in rows.values()):
-        errors.append("html_contract has unresolved module rules; keep profile draft")
+    waived_modules = set()
+    if not isinstance(waivers, list):
+        errors.append("optional_rule_waivers must be an array")
+        waivers = []
+    for waiver in waivers:
+        if not isinstance(waiver, dict):
+            errors.append("optional_rule_waivers entries must be objects")
+            continue
+        module = waiver.get("module")
+        if module not in DEFERRABLE_MODULES or module in waived_modules:
+            errors.append(f"optional_rule_waivers invalid or duplicate module: {module}")
+            continue
+        waived_modules.add(module)
+        if rows.get(module, [None, None])[1] != "待确认":
+            errors.append(f"optional_rule_waivers {module}: only a pending module can be deferred")
+        if waiver.get("decision") != "defer_until_needed":
+            errors.append(f"optional_rule_waivers {module}: decision must be defer_until_needed")
+        if not isinstance(waiver.get("reason"), str) or len(waiver["reason"].strip()) < 10:
+            errors.append(f"optional_rule_waivers {module}: a specific reason is required")
+        if not isinstance(waiver.get("operator_confirmation"), str) or not waiver["operator_confirmation"].strip():
+            errors.append(f"optional_rule_waivers {module}: operator confirmation is required")
+    unresolved = {name for name, cells in rows.items() if cells[1] == "待确认"}
+    if unresolved & CORE_RULE_MODULES:
+        errors.append("html_contract has unresolved core layout rules; these cannot be waived")
+    if unresolved - waived_modules:
+        errors.append("html_contract has unresolved module rules without operator waiver; keep profile draft")
     return errors
 
 
@@ -189,6 +218,13 @@ def check_profile(profile_path):
                 errors.append(f"review_report missing required section: {section}")
         if "【未填写】" in report:
             errors.append("review_report still contains unfilled template placeholders")
+        for waiver in profile.get("optional_rule_waivers") or []:
+            if isinstance(waiver, dict) and isinstance(waiver.get("module"), str):
+                if waiver["module"] not in report:
+                    errors.append(f"review_report must disclose deferred module: {waiver['module']}")
+                confirmation = waiver.get("operator_confirmation")
+                if isinstance(confirmation, str) and confirmation not in report:
+                    errors.append(f"review_report must quote operator confirmation for: {waiver['module']}")
         snippets = re.findall(r"```html\s*\n([\s\S]*?)\n```", report, flags=re.IGNORECASE)
         if not 2 <= len(snippets) <= 4 or any(not re.search(r"<\s*[a-z][\w-]*\b", item, re.IGNORECASE)
                                                 or re.search(r"【|\.\.\.|example\.(?:webp|jpe?g|png)", item, re.IGNORECASE)
@@ -342,7 +378,8 @@ def check_profile(profile_path):
                         errors.append(f"html_contract missing required section: {section}")
                 if "【未填写】" in contract:
                     errors.append("html_contract still contains unfilled template placeholders")
-                errors.extend(check_rule_table(contract, root, profile.get("assets") or []))
+                errors.extend(check_rule_table(contract, root, profile.get("assets") or [],
+                                               profile.get("optional_rule_waivers", [])))
         except ValueError as exc:
             errors.append(f"{field}: {exc}")
     assets = profile.get("assets")

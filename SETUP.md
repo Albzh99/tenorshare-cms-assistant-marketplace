@@ -21,6 +21,8 @@ codex plugin add tenorshare-cms-assistant@pogoskill-team
 
 随后运行插件根目录 `scripts/verify-workstation.py`，实际检查当前凭据、`/cms/site/list` 只读 POST 和 WebP 编码能力。Windows 缺 PATH 中的 PowerShell 时，AI 定位当前机器真实的 `pwsh` 并传 `--powershell`；Mac 不传。失败按具体错误处理，不把“Key 检查通过”误报为“4DDiG 已建规范”或“文章已上传”。
 
+安装检查通过后，**安装 AI 必须主动告知运营模型选择**，不能等运营问：首次学习网站、编写及审核 `html-contract.md`／组件校验器、修订规范时，请在 Codex 的模型／推理控制中选当前账户可用的较强推理模型；这是需要判断本站结构的阶段。规范 `ready` 且几篇草稿上传、回读稳定后，重复执行才可改用较便宜的 Luna。遇到新模块、版式冲突或规范修订，再切回较强模型。只建议和说明，不假称 AI 能自动切换模型，也不假定运营账户一定有某个具体型号。安装完成回复中同时给出这段提醒和一条可直接复制的建规范消息。
+
 ## 4DDiG 英文站首次测试
 
 在新对话中直接向 AI 发送：

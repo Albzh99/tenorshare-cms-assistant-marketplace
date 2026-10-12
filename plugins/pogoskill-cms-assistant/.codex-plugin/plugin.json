@@ -1,6 +1,6 @@
 {
   "name": "tenorshare-cms-assistant",
-  "version": "1.0.0+codex.20261012layout",
+  "version": "1.0.0+codex.20261012optional",
   "description": "Tenorshare \u591a\u7ad9\u70b9 CMS \u6587\u7ae0\u52a9\u624b\uff1a\u9996\u6b21\u5efa\u7acb\u5e76\u786e\u8ba4\u672c\u7ad9\u89c4\u8303\uff0c\u4e4b\u540e\u6309\u89c4\u8303\u4fdd\u5b58\u8349\u7a3f\uff1b\u4fdd\u7559 PoGoskill \u4e13\u7528\u6d41\u7a0b",
   "author": {
     "name": "Tenorshare Team"
@@ -18,7 +18,7 @@
     ],
     "defaultPrompt": [
       "我负责【网站／语言】的文章。这是新文章。请使用 $tenorshare-cms-article-assistant，按本机已确认的本站 HTML 版式规范完整处理文字和图片；从 CMS 按文章主题和 URL 选择分类，保存并回读草稿。不要每篇重新学习，不要生成或发布文章。",
-      "\u8bf7\u5b89\u88c5\u5e76\u68c0\u67e5 Tenorshare CMS \u6587\u7ae0\u52a9\u624b\u3002\u5148\u68c0\u67e5\u5df2\u4fdd\u5b58\u7684 CMS Key\uff1b\u6ca1\u6709\u65f6\u624d\u6253\u5f00\u53ef\u89c1\u7ec8\u7aef\uff0c\u8ba9\u6211\u590d\u5236 Key \u540e\u6309 Enter\u3002\u8bf7\u6309\u672c\u673a Windows \u6216 macOS \u6267\u884c\u5e76\u9a8c\u8bc1\u3002",
+      "请安装并检查 Tenorshare CMS 文章助手。先检查本机已保存的 CMS Key；没有时才打开可见终端，让我复制 Key 后按 Enter。按本机 Windows 或 macOS 执行并验证。安装完成时主动告诉我：首次学习网站、编写及审查 HTML 规范用较强推理模型；规范确认且上传稳定后，日常重复任务才考虑 Luna，遇到新模块再切回较强模型。不要假称能自动切换。",
       "请使用 $cms-site-standard-builder 为我负责的【网站／语言】首次建立 HTML 版式规范。从 CMS 同模板、同版式但可跨分类的旧文章学习，展示真实组件和分类的逐篇选择方法，等待我确认。不要先问我选分类；这一步不上传文章。",
       "我负责 4DDiG 英文站的 SEO 文章。请使用 $tenorshare-cms-article-assistant 只读学习本站已发布文章的 HTML；分类不同但版式相同应共用一套本地规范。生成详细规则和运营审核报告，等待我确认。现在不上传文章。"
     ]
