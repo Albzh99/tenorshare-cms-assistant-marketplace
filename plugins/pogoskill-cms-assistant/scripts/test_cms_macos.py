@@ -35,8 +35,9 @@ class MacTransportTests(unittest.TestCase):
                 launcher.with_suffix(".ready").write_text("Apple_Terminal", encoding="utf-8")
                 return subprocess.CompletedProcess(command, 0)
             with patch.object(MODULE, "require_macos"), patch.object(
-                    MODULE.subprocess, "run", side_effect=launch):
+                    MODULE.subprocess, "run", side_effect=launch), patch("builtins.print") as announcement:
                 MODULE.open_save_key_terminal(temp)
+            announcement.call_args.args[0].encode("cp1252")
             command = observed["command"]
             self.assertEqual(command[:3], ["open", "-a", "Terminal"])
             launcher = Path(command[3])

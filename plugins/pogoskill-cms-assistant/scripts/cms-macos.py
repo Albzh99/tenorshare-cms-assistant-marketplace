@@ -174,9 +174,9 @@ def open_save_key_terminal(launcher_dir=None):
     finally:
         launcher.unlink(missing_ok=True)
         ready_file.unlink(missing_ok=True)
-    print("已确认脚本在 macOS Terminal.app 中启动。请确认你看见独立系统窗口，"
-          "只在那个窗口复制 Key 后按 Enter；"
-          "完成后回到 Codex，由 AI 运行 check-key 验证。Key 不会出现在命令或临时脚本中。")
+    print("Terminal.app key prompt started. Confirm the separate macOS window is visible; "
+          "copy the key, then press Enter in that window only. "
+          "Return to Codex for check-key verification.")
 
 
 def require_external_terminal():
