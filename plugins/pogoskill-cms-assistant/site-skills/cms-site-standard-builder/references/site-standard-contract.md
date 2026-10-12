@@ -10,11 +10,11 @@
 
 ## 输入和证据
 
-本站分类要单独建立证据：按目标站点和实际文章类型查询 `classify/displayclassifylist`，将名称、分类自身 ID、分类页面 ID、目录／URL 与参考页 `page/info` 对照；保存原始响应和 `request_id`。作者、产品、模块和相关文章也需核对本站候选与旧文用法。不能仅复制一篇旧文的动态关联 ID，更不能沿用其他站点的分类。分类或关联方式不确定时保留 `draft` 并在运营报告中列出待确认项。
+本站分类要建立**选择规则**，而不是为每个分类建一份 HTML 规范：用目标站点的 `classify/displayclassifylist`，将分类名称、自身 ID、分类页面 ID、目录／URL 与参考页 `page/info` 对照，保存原始响应和 `request_id`。分类映射是 CMS 写入字段；只有参考页证明它会改变正文模板或 HTML 模块时，才影响版式族划分。作者、产品、模块和相关文章也需核对本站候选与旧文用法。不能仅复制一篇旧文的动态关联 ID，更不能沿用其他站点的分类。学习时不要求列尽站点所有分类；只要能确定以后每篇可通过实时列表、主题和 URL 安全匹配，HTML 规范可以完成。若某篇新稿仍匹配多个分类，才在那篇草稿写入前向运营问具体分类；不得因此拒绝学习或要求运营预先选一个分类。
 
-- 同事只需给出产品／网站、语言和新稿；旧 HTML 是可选参考。助手先从 `site/list` 确认站点，再用 `page/list` 查询同站点已发布文章，按模板／分类／URL 选 2–3 篇同类页面，用 `page/info` 的完整 `content` 学习 HTML。对每份参考运行 `inspect-reference-html.py`，再亲自阅读原文。只有 CMS 没有足够同类页面时才请同事给旧 HTML；站点多候选时只问网址，不让同事找 ID、填 JSON 或操作终端。
+- 同事只需给出产品／网站和语言；若要上传新稿再附稿件，旧 HTML 是可选参考。助手先从 `site/list` 确认站点，再用 `page/list` 查询同站点已发布文章，按模板与正文结构选 2–3 篇页面；可跨分类取样，用 `page/info` 的完整 `content` 学习 HTML。对每份参考运行 `inspect-reference-html.py`，再亲自阅读原文。只有 CMS 没有足够相同版式页面时才请同事给旧 HTML；站点多候选时只问网址，不让同事找 ID、填 JSON 或操作终端。
 - 通过 `site/list`、`template/list` 和 `template/fields` 取得可核对的站点 ID、模板 ID、字段和 `request_id`。CMS 页面参考要保存 `page/info` 的原始响应及 `request_id`；用户旧 HTML 没有 CMS 页面 ID 也可以作为样式证据，但 CMS 映射证据仍必须齐全才能把 profile 标成 `ready`。
-- 参考文章应与目标文章类型相同；多个风格差异较大的文章类型分别建规范。逐一判断下载、使用指南、视频、Buy Box 和本站独有模块是固定、可选、无还是待确认，记录出现条件、顺序、真实 HTML 与证据；不能把观察清单误当必备模块。作者、URL、标题、关键词、描述和正文等 CMS 字段名及 POST 调用方式共用，但它们的取值、生成规则、链接目标和关联 ID 必须逐站确认；不从 PoGoskill 规则推断。
+- `article_type` 表示 HTML 版式族，不表示 CMS 分类。相同站点、语言、模板字段和正文结构的文章即使分类不同，也用同一规范；仅在模板 ID／必填字段或模块骨架实质不同且不能用条件规则表达时拆分。逐一判断下载、使用指南、视频、Buy Box 和本站独有模块是固定、可选、无还是待确认，记录出现条件、顺序、真实 HTML 与证据；不能把观察清单误当必备模块。作者、URL、标题、关键词、描述和正文等 CMS 字段名及 POST 调用方式共用，但它们的取值、生成规则、链接目标和关联 ID 必须逐站确认；不从 PoGoskill 规则推断。
 - 读取目标站点已使用的图片路径与 HTML 图片盒、格式组合、主图尺寸、竖图展示和已有图片复用方式。图片经 `/cms/picture/upload` 上传，再使用该次返回的图片 `publish_id` 发布资源，是共用的 CMS 调用流程；各站图片规格与 HTML 仍以本站实例和 CMS 结果为准。若某站点不用某模块，明确写“无”，不要硬塞 PoGoskill CTA 或 Buy Box。
 
 ## 文件格式
@@ -27,7 +27,7 @@
 - macOS：`/Users/<当前用户名>/.codex/tenorshare-cms/site-profiles/`
 - 若设置了 `CODEX_HOME`：`<CODEX_HOME>/tenorshare-cms/site-profiles/`
 
-其下按 CMS 站点、语言、文章类型隔离。新建时 `<site-slug>` 应含 CMS 站点 ID 和域名短名，防止同产品多域名混淆；已有 profile 不要仅因命名规则变化而擅自搬迁。实例结构（文件名是示例，真实内容必须来自本站）：
+其下按 CMS 站点、语言、HTML 版式族隔离，**不按 CMS 分类隔离**。无真实版式差异时 `<article-type>` 可用 `standard-article`；不得用 `pikmin-bloom`、`corrupted-file` 等分类／主题名称作为拆规范的理由。已有 profile 不要仅因命名规则变化而擅自搬迁，先核对其模板和规则是否已可跨分类复用。新建时 `<site-slug>` 应含 CMS 站点 ID 和域名短名，防止同产品多域名混淆。实例结构（文件名是示例，真实内容必须来自本站）：
 
 ```text
 site-profiles/
