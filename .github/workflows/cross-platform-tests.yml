@@ -21,6 +21,6 @@ jobs:
         run: python -m pip install pillow python-docx
       - name: Run script tests without CMS credentials or writes
         run: python -m unittest discover -s plugins/pogoskill-cms-assistant/scripts -p 'test_*.py'
-      - name: Save and read a dummy key in macOS Keychain
+      - name: Save, update, and read a dummy key in macOS Keychain
         if: runner.os == 'macOS'
-        run: python -c "import importlib.util; from pathlib import Path; p=Path('plugins/pogoskill-cms-assistant/scripts/cms-macos.py'); s=importlib.util.spec_from_file_location('cms_macos',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); key='AFS-TEST-0000-0000-0000-0000'; m.save_key(key); assert m.read_key()==key; print('Dummy Keychain roundtrip passed')"
+        run: python -c "import importlib.util; from pathlib import Path; p=Path('plugins/pogoskill-cms-assistant/scripts/cms-macos.py'); s=importlib.util.spec_from_file_location('cms_macos',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); key='AFS-TEST-0000-0000-0000-0000'; m.save_key(key); m.save_key(key); assert m.read_key()==key; print('Dummy Keychain update roundtrip passed')"

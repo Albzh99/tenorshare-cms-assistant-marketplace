@@ -73,6 +73,21 @@ def account_bytes():
     return getpass.getuser().encode("utf-8")
 
 
+def read_key_via_security():
+    """Read without putting the secret in argv when the legacy API rejects parameters."""
+    require_macos()
+    command = ["/usr/bin/security", "find-generic-password", "-w",
+               "-s", SERVICE.decode("utf-8"), "-a", account_bytes().decode("utf-8")]
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(f"macOS Keychain read failed in both APIs: "
+                           f"legacy status=-50, security exit={result.returncode}")
+    key = result.stdout.strip()
+    if not KEY_PATTERN.fullmatch(key):
+        raise RuntimeError("Stored CMS API key is invalid")
+    return key
+
+
 def read_key(api=None):
     api = api or security_framework()[0]
     account = account_bytes()
@@ -82,6 +97,8 @@ def read_key(api=None):
         ctypes.byref(size), ctypes.byref(data), None)
     if status == -25300:  # errSecItemNotFound
         return None
+    if status == -50:  # errSecParam on some configured default keychains
+        return read_key_via_security()
     if status != 0:
         raise RuntimeError(f"macOS Keychain read failed, status={status}")
     try:
@@ -105,14 +122,18 @@ def save_key(key, api=None, core=None):
     status = api.SecKeychainAddGenericPassword(None, len(SERVICE), SERVICE, len(account), account,
         len(raw), ctypes.cast(buffer, ctypes.c_void_p), ctypes.byref(item))
     if status == -25299:  # errSecDuplicateItem: update only this service/account
+        old_size = ctypes.c_uint32(0)
+        old_data = ctypes.c_void_p()
         found = api.SecKeychainFindGenericPassword(None, len(SERVICE), SERVICE, len(account), account,
-            None, None, ctypes.byref(item))
+            ctypes.byref(old_size), ctypes.byref(old_data), ctypes.byref(item))
         if found != 0:
             raise RuntimeError(f"macOS Keychain item lookup failed, status={found}")
         try:
             status = api.SecKeychainItemModifyAttributesAndData(item, None, len(raw),
                 ctypes.cast(buffer, ctypes.c_void_p))
         finally:
+            if old_data.value:
+                api.SecKeychainItemFreeContent(None, old_data)
             core.CFRelease(item)
     elif item.value:
         core.CFRelease(item)

@@ -12,6 +12,18 @@ SPEC.loader.exec_module(MODULE)
 
 
 class MacTransportTests(unittest.TestCase):
+    def test_keychain_param_error_uses_security_cli_without_secret_in_argv(self):
+        class ParamErrorKeychain:
+            def SecKeychainFindGenericPassword(self, *_args):
+                return -50
+        key = "AFS1727-0001-example-valid-key"
+        with patch.object(MODULE, "require_macos"), patch.object(
+                MODULE.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, stdout=key)) as run:
+            self.assertEqual(MODULE.read_key(api=ParamErrorKeychain()), key)
+        self.assertEqual(run.call_args.args[0][:3],
+                         ["/usr/bin/security", "find-generic-password", "-w"])
+        self.assertNotIn(key, run.call_args.args[0])
+
     def test_save_key_rejects_codex_integrated_terminal(self):
         with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Codex",
                                                 "TENORSHARE_CMS_TERMINAL_LAUNCH": "1"}):

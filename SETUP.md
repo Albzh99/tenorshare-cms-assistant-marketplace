@@ -23,6 +23,8 @@ codex plugin add tenorshare-cms-assistant@pogoskill-team
 
 Mac 的 CMS POST 现在使用系统 `curl`，不再由 Python `urllib` 发往网关；Key 仍从当前用户 Keychain 读取，经 curl 的标准输入传入，不出现在命令参数或临时文件。`check-key` 只证实本机有格式有效的 Key，不等于网关授权。若出现 403，先用当前插件的 `verify-workstation.py` 检查只读 `/cms/site/list`，记录脱敏的接口、HTTP 状态、`code`、`msg`、`request_id`；再根据同一台 Mac 上 curl 的实际结果区分旧版脚本、请求路径与网关／网络出口问题，不直接说 Key 没权限或反复索要。
 
+若 Mac 报 `Keychain status=-50`，先引用脚本的完整错误（`read`、`save` 或 `item lookup`），不要只说“Key 没权限”。读取遇到旧 Keychain API 的 `-50` 时，脚本会改用系统 `security find-generic-password -w` 读取同一服务与用户的条目；Key 仅在进程内接收，不输出到日志。已有条目覆盖保存时，脚本会完整取得旧条目的指针后再更新。若两个读取方式都失败，应记录两个非敏感状态码并停止；不要反复要求用户重存或显示 Key。
+
 安装检查通过后，**安装 AI 必须主动告知运营模型选择**，不能等运营问：首次学习网站、编写及审核 `html-contract.md`／组件校验器、修订规范时，请在 Codex 的模型／推理控制中选当前账户可用的较强推理模型；这是需要判断本站结构的阶段。规范 `ready` 且几篇草稿上传、回读稳定后，重复执行才可改用较便宜的 Luna。遇到新模块、版式冲突或规范修订，再切回较强模型。只建议和说明，不假称 AI 能自动切换模型，也不假定运营账户一定有某个具体型号。安装完成回复中同时给出这段提醒和一条可直接复制的建规范消息。
 
 ## 4DDiG 英文站首次测试
