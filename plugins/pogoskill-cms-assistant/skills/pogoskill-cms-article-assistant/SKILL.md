@@ -27,7 +27,7 @@ API Key 由统一凭据脚本管理：优先使用稳定的 DPAPI 加密、当�
 pwsh -NoProfile -File scripts/cms-save-api-key.ps1
 ```
 
-脚本停在“请现在复制完整的 CMS API Key”后，Agent 必须把同一个运行会话打开到 Codex 可见终端面板。只有打开终端的工具返回成功后才能说“终端已打开”；不得把后台会话描述成可见终端，也不得让使用者手工打开 PowerShell 或输入缓存长路径。此时让使用者复制 Key，回到终端直接按 Enter；脚本随后读取剪贴板，写入 DPAPI 加密且仅当前 Windows 用户可读的本地存储，并在可用时同时写入 Windows Credential Manager，最后清空剪贴板。Agent 必须等待同一进程明确退出，再从同一插件根目录运行 `cms-check-api-key.ps1`；检查报告可用后才算完成。不要让使用者把 Key 粘贴进终端、发到聊天、写进命令行、文章文件或日志。
+脚本会自动打开独立的系统 PowerShell 窗口，并验证可见控制台及子进程就绪信号。禁止用 Codex 内置终端面板代替，不让使用者手工打开 PowerShell 或输入缓存长路径。只有收到窗口就绪信号才说“系统窗口已打开”；这还不表示 Key 已保存。此时让使用者复制 Key，回到终端直接按 Enter；脚本随后读取剪贴板，写入 DPAPI 加密且仅当前 Windows 用户可读的本地存储，并在可用时同时写入 Windows Credential Manager，最后清空剪贴板。用户在独立系统窗口完成保存后，Agent 再从同一插件根目录运行 `cms-check-api-key.ps1`；检查报告可用后才算完成。不要让使用者把 Key 粘贴进终端、发到聊天、写进命令行、文章文件或日志。
 
 如果 Agent 已经确认使用者提前复制完 Key，并且要通过非交互终端自动执行，则使用：
 

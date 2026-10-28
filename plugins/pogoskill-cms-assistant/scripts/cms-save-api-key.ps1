@@ -1,11 +1,29 @@
 ﻿param(
   [Alias('ApiKeyFromClipboard')][switch]$FromClipboard,
   [switch]$Prompt,
-  [switch]$KeepClipboard
+  [switch]$KeepClipboard,
+  [switch]$ExternalTerminal,
+  [string]$ReadyFile,
+  [switch]$ValidateWindowOnly
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'CmsExternalTerminal.ps1')
+if (-not $ExternalTerminal) {
+  Open-CmsSaveKeyTerminal -FromClipboard:$FromClipboard -Prompt:$Prompt -KeepClipboard:$KeepClipboard -ValidateWindowOnly:$ValidateWindowOnly
+  return
+}
+if (-not (Test-CmsExternalConsole)) {
+  throw 'Key entry requires a separate visible Windows PowerShell window, not the Codex integrated terminal. Run cms-save-api-key.ps1 without -ExternalTerminal to open it automatically.'
+}
+if ($ValidateWindowOnly) {
+  if ($ReadyFile) { [IO.File]::WriteAllText($ReadyFile, 'ExternalWindowsConsole') }
+  Write-Output 'External Windows console verified. No clipboard or CMS credential was read or changed.'
+  return
+}
 . (Join-Path $PSScriptRoot 'CmsCredential.ps1')
+$Host.UI.RawUI.WindowTitle = 'Tenorshare CMS Key - System PowerShell'
+if ($ReadyFile) { [IO.File]::WriteAllText($ReadyFile, 'ExternalWindowsConsole') }
 
 $keyPtr = [IntPtr]::Zero
 $apiKey = $null

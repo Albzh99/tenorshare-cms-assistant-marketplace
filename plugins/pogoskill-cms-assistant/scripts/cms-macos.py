@@ -146,22 +146,22 @@ def save_key_terminal_script(python_executable, cms_script, ready_file):
     """Return a no-secret .command script for the actual macOS Terminal app."""
     command = f"{shlex.quote(str(python_executable))} {shlex.quote(str(cms_script))} save-key"
     return ("#!/bin/zsh\n"
-            "if [ \"$TERM_PROGRAM\" != Apple_Terminal ]; then\n"
+            "if [ \"$TERM_PROGRAM\" != Apple_Terminal ] || [ ! -t 0 ]; then\n"
             "  printf '此脚本必须在 macOS Terminal.app 中运行。\\n'\n"
             "  exit 1\n"
             "fi\n"
             "export TENORSHARE_CMS_TERMINAL_LAUNCH=1\n"
             f"printf 'Apple_Terminal' > {shlex.quote(str(ready_file))}\n"
             f"{command}\n"
-            "status=$?\n"
-            "if [ $status -eq 0 ]; then\n"
+            "cms_save_status=$?\n"
+            "if [ $cms_save_status -eq 0 ]; then\n"
             "  printf '\\nKey 已保存。回到 Codex，让 AI 检查是否可读取。\\n'\n"
             "else\n"
             "  printf '\\n保存失败。回到 Codex，告知 AI 此窗口显示的错误。\\n'\n"
             "fi\n"
             "printf '按 Enter 关闭这个 Terminal 窗口：'\n"
             "read -r\n"
-            "exit $status\n")
+            "exit $cms_save_status\n")
 
 
 def wait_for_external_terminal(ready_file, timeout_seconds=20):
@@ -202,7 +202,8 @@ def open_save_key_terminal(launcher_dir=None):
 
 def require_external_terminal():
     if (os.environ.get("TERM_PROGRAM") != "Apple_Terminal"
-            or os.environ.get("TENORSHARE_CMS_TERMINAL_LAUNCH") != "1"):
+            or os.environ.get("TENORSHARE_CMS_TERMINAL_LAUNCH") != "1"
+            or not sys.stdin.isatty()):
         raise RuntimeError("save-key must run in macOS Terminal.app; use open-save-key-terminal first")
 
 
@@ -353,7 +354,13 @@ def main():
     elif args.command == "open-save-key-terminal":
         open_save_key_terminal()
     elif args.command == "save-key":
-        require_external_terminal()
+        try:
+            require_external_terminal()
+        except RuntimeError:
+            # Old callers may invoke save-key directly inside Codex. Route them
+            # to Terminal.app instead of ever prompting/reading its clipboard here.
+            open_save_key_terminal()
+            return
         print("请现在复制管理员给你的完整 CMS API Key。复制后回到这个窗口，只按 Enter。", flush=True)
         input()
         key = subprocess.run(["pbpaste"], check=True, capture_output=True, text=True).stdout.strip()

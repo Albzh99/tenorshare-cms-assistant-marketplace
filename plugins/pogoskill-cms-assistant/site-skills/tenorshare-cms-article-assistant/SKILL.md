@@ -5,6 +5,8 @@ description: 为 4DDiG 等 Tenorshare 非 PoGoskill 网站和语言首次学习�
 
 # Tenorshare 全站文章助手
 
+凭据初始化只使用真实系统窗口：Windows 调用 `scripts/cms-save-api-key.ps1` 自动弹出独立 PowerShell，macOS 调用 `scripts/cms-macos.py open-save-key-terminal` 打开 Terminal.app。不得用 Codex 内置终端面板代替。必须收到窗口就绪信号，用户才复制 Key 并在该系统窗口按 Enter；之后另行检查 Key 和 CMS 连接。已有有效 Key 直接复用。
+
 附加增强，保留原有能力和授权边界：首次或修订学习遵守[完整模板学习与纠错持久化](../cms-site-standard-builder/references/learning-and-corrections.md)，先查文章栏目首篇风格模板并完整学其所有结构，再读至少三篇历史文总结使用条件。用户纠正当轮写入对应站点的持久规范与 `corrections.json`，同步实际组件及检查并验证旧错误能被拦截，后续自动读取；不要求运营每篇重复说明。已有规范兼容，不批量重建、不删除原确认、图片及草稿回读流程。
 
 运营只需说明产品和语言或网站；首次学习不需要新稿，旧 HTML 是可选参考。你负责从公司 CMS 发现准确站点、学习旧文章、建立规范；运营确认后，才在新的草稿任务中处理图片、制作完整 HTML、保存并回读。不要让运营查站点 ID、模板 ID、运行命令或编辑 JSON。用运营的语言沟通，保持新稿原语言及原文，未经授权不改写正文。**先按网站／产品选择入口，再判断语言**：4DDiG 英文站属于本技能，不能因“英文”改用 `$pogoskill-cms-en-publisher`。如果误载入 PoGoskill 专用技能，改回本入口继续只读站点发现，不把“只支持 PoGoskill”误报成 4DDiG CMS 不可用。

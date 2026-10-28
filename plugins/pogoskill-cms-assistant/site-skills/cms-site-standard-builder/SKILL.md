@@ -5,6 +5,8 @@ description: 为 4DDiG 等 Tenorshare 网站首次只读学习该站已发布文
 
 # 为新网站建立文章规范
 
+凭据初始化只使用真实系统窗口：Windows 调用 `scripts/cms-save-api-key.ps1` 自动弹出独立 PowerShell，macOS 调用 `scripts/cms-macos.py open-save-key-terminal` 打开 Terminal.app。不得用 Codex 内置终端面板代替。必须收到窗口就绪信号，用户才复制 Key 并在该系统窗口按 Enter；之后另行检查 Key 和 CMS 连接。已有有效 Key 直接复用。
+
 ## 附加：完整模板学习与纠错记忆
 
 先读取并执行[完整学习与纠错持久化补充](references/learning-and-corrections.md)。保留下方所有既有规则：本补充将原2–3篇取样增强为“先完整读取文章栏目首篇风格模板，再至少三篇历史文章比较”，新增逐结构覆盖证据和持久纠错回归；不把可选样式全部塞进每篇，不大改已有profile。摘要不能代替读完模板；运营纠正一次后应更新本站规范、组件和校验，后续自动执行，不只修当篇。

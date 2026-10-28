@@ -5,6 +5,8 @@ description: 按已建立并验证的公司 CMS 站点规范制作其他网站�
 
 # 按站点规范处理文章
 
+凭据初始化只使用真实系统窗口：Windows 调用 `scripts/cms-save-api-key.ps1` 自动弹出独立 PowerShell，macOS 调用 `scripts/cms-macos.py open-save-key-terminal` 打开 Terminal.app。不得用 Codex 内置终端面板代替。必须收到窗口就绪信号，用户才复制 Key 并在该系统窗口按 Enter；之后另行检查 Key 和 CMS 连接。已有有效 Key 直接复用。
+
 附加执行[完整学习与纠错持久化补充](../cms-site-standard-builder/references/learning-and-corrections.md)，保留下方既有流程与限制。每次任务先读取本站持久 `corrections.json`（若存在）及对应实际规则；纠正一次后不得依赖运营重复提醒。未验证的修复先完成组件／校验／回归再上稿；已确认旧profile无需每篇重学。两份附加证据由profile检查自动发现，不能为通过检查临时移走。修改已有稿前读取最新CMS版本，只改授权部分并保留运营手改；API回读一致不等于结构或视觉正确。
 
 主图是正文图片中的独立角色。生成时从本站已确认规范的主图片段复制完整外层容器与对齐相关 class／属性，再替换 URL、alt 等允许变化的值；不能只插入 `<img>` 或把普通正文图片盒当主图盒。写入前及 CMS 回读后，站点 `validate-html.py` 必须核对主图容器与参考结构；若本站规范没有明确主图对齐规则，先修订该站 profile，不猜测全公司统一居中样式。
