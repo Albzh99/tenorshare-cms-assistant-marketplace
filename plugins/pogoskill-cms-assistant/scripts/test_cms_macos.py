@@ -30,12 +30,35 @@ class MacTransportTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Terminal.app"):
                 MODULE.require_external_terminal()
         with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Apple_Terminal",
-                                                "TENORSHARE_CMS_TERMINAL_LAUNCH": "1"}):
+                                                "TENORSHARE_CMS_TERMINAL_LAUNCH": "1"}), patch.object(MODULE.sys.stdin, "isatty", return_value=True):
             MODULE.require_external_terminal()
         with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Apple_Terminal",
                                                 "TENORSHARE_CMS_TERMINAL_LAUNCH": ""}):
             with self.assertRaisesRegex(RuntimeError, "Terminal.app"):
                 MODULE.require_external_terminal()
+
+    def test_inherited_terminal_environment_without_real_tty_is_rejected(self):
+        with patch.dict(MODULE.os.environ, {"TERM_PROGRAM": "Apple_Terminal",
+                                           "TENORSHARE_CMS_TERMINAL_LAUNCH": "1"}), patch.object(
+                MODULE.sys.stdin, "isatty", return_value=False):
+            with self.assertRaisesRegex(RuntimeError, "Terminal.app"):
+                MODULE.require_external_terminal()
+
+    def test_direct_save_command_in_codex_opens_system_terminal_without_reading_key(self):
+        with patch.object(MODULE, 'require_macos'), patch.object(MODULE.sys, 'argv', ['cms-macos.py', 'save-key']), patch.dict(
+                MODULE.os.environ, {'TERM_PROGRAM': 'Codex', 'TENORSHARE_CMS_TERMINAL_LAUNCH': ''}), patch.object(
+                MODULE, 'open_save_key_terminal') as opened, patch.object(MODULE, 'save_key') as saved, patch.object(
+                MODULE.subprocess, 'run') as transport:
+            MODULE.main()
+        opened.assert_called_once()
+        saved.assert_not_called()
+        transport.assert_not_called()
+
+    def test_zsh_launcher_does_not_assign_readonly_status_parameter(self):
+        content = MODULE.save_key_terminal_script('/usr/bin/python3', '/tmp/cms script.py', Path('/tmp/ready'))
+        self.assertNotIn('\nstatus=$?', content)
+        self.assertIn('cms_save_status=$?', content)
+        self.assertIn('[ ! -t 0 ]', content)
 
     def test_external_terminal_launcher_contains_no_key_or_clipboard_value(self):
         with tempfile.TemporaryDirectory() as temp:
