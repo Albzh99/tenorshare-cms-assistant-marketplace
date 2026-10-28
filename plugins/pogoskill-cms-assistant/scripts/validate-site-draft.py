@@ -106,6 +106,11 @@ def main():
     payload = json.loads(Path(args.payload_json).read_text(encoding="utf-8-sig"))
     response = json.loads(Path(args.page_info).read_text(encoding="utf-8-sig")) if args.page_info else None
     result = check_draft(profile, payload, response)
+    root = Path(args.profile_json).resolve().parent
+    result["errors"].extend(MODULE.ADDITIONS.check_article(root, profile, payload.get("content")))
+    if response is not None and isinstance(response.get("data"), dict):
+        result["errors"].extend(MODULE.ADDITIONS.check_article(root, profile, response["data"].get("content")))
+    result["pass"] = not result["errors"]
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if not result["pass"]:
         sys.exit(1)

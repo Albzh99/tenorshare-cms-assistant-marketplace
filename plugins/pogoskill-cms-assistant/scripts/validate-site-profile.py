@@ -2,12 +2,19 @@
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
+
+
+_ADDITIONS_SPEC = importlib.util.spec_from_file_location(
+    "site_quality_additions", Path(__file__).with_name("site-quality-additions.py"))
+ADDITIONS = importlib.util.module_from_spec(_ADDITIONS_SPEC)
+_ADDITIONS_SPEC.loader.exec_module(ADDITIONS)
 
 
 SAFE_SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -79,6 +86,9 @@ def rules_sha256(profile, root):
             names.append(reference.get("html_file") if reference.get("kind") == "html"
                          else reference.get("page_info_json"))
     files = {}
+    # Optional sidecars are discovered at fixed names: callers cannot forget a flag.
+    # With neither file present, existing profile fingerprints remain unchanged.
+    names.extend(ADDITIONS.sidecar_files(root))
     for name in names:
         path = local_file(root, name)
         files[str(Path(name))] = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -401,6 +411,7 @@ def check_profile(profile_path):
         except ValueError as exc:
             errors.append(f"validation_examples.{kind}: {exc}")
 
+    errors.extend(ADDITIONS.check(root, profile))
     return {
         "pass": not errors,
         "profile_id": profile.get("profile_id"),
